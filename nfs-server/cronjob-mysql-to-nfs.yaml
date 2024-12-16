@@ -1,0 +1,32 @@
+---
+# MySQL Backup CronJob
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: mysql-backup
+  namespace: database
+spec:
+  schedule: "0 2 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: mysql:8
+            command: ["sh", "-c", "mysqldump -h mysql-cluster-primary -u root -p${MYSQL_ROOT_PASSWORD} --all-databases > /mnt/backup/backup-$(date +%F).sql"]
+            env:
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-root-secret
+                  key: password
+            volumeMounts:
+            - mountPath: /mnt/backup
+              name: nfs-backup
+          restartPolicy: OnFailure
+          volumes:
+          - name: nfs-backup
+            nfs:
+              server: <NFS_SERVER_IP>
+              path: /exports/mysql-backups
