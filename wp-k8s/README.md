@@ -1,0 +1,5 @@
+# BOOTCAMP DEVOPS - MINI PROJET COMMUN KUBERNETES
+
+## SCHEMA DE L'ARCHITECTURE
+
+![alt text](_schema_architecture.png)
