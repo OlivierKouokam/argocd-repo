@@ -1,3 +1,3 @@
-#GitOps Multi-Cluster avec ArgoCD
+## GitOps Multi-Cluster avec ArgoCD
 
-## Configuration Steps
+### Configuration Steps
