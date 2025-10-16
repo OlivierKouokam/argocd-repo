@@ -1,0 +1,38 @@
+# voting-app-chart/values.yaml
+# Paramètres globaux
+global:
+  replicaCount: 1
+
+# Configuration de la base de données
+db:
+  image: postgres:15-alpine
+  username: postgres
+  password: postgres
+  port: 5432
+
+# Configuration Redis
+redis:
+  image: redis:alpine
+  port: 6379
+
+# Configuration de l'application Result
+result:
+  image: dockersamples/examplevotingapp_result
+  service:
+    type: NodePort
+    port: 8081
+    targetPort: 80
+    nodePort: 31001
+
+# Configuration de l'application Vote
+vote:
+  image: dockersamples/examplevotingapp_vote
+  service:
+    type: NodePort
+    port: 8080
+    targetPort: 80
+    nodePort: 31000
+
+# Configuration du Worker
+worker:
+  image: dockersamples/examplevotingapp_worker

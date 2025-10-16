@@ -1,0 +1,7 @@
+# voting-app-chart/Chart.yaml
+apiVersion: v2
+name: voting-app
+description: A Helm chart for Kubernetes voting application
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
