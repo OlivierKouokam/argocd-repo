@@ -1,35 +1,9 @@
-## GitOps Multi-Cluster avec ArgoCD
+# GitOps Multi-Cluster avec ArgoCD
 
-                           ┌──────────────────────────────────────────────┐
-                           │                 Git Repository               │
-                           │ (App manifests, Helm charts, ArgoCD config)  │
-                           └──────────────────────────────────────────────┘
-                                              ▲
-                                              │ GitOps Sync
-                                              │
-                                ┌─────────────┴─────────────┐
-                                │         Bastion EC2       │
-                                │ (CLI: aws, eksctl, kubectl│
-                                │        argocd, helm)      │
-                                └─────────────┬─────────────┘
-                                              │
-              ┌───────────────────────────────┼────────────────────────────────┐
-              │                               │                                │
-   ┌──────────▼───────────┐       ┌───────────▼────────────┐       ┌───────────▼────────────┐
-   │   EKS Cluster 1      │       │    EKS Cluster 2       │       │    EKS Cluster 3       │
-   │  (us-east-1a)        │       │   (us-east-1b)         │       │   (us-east-1c)         │
-   └─────────┬────────────┘       └───────────┬────────────┘       └───────────┬────────────┘
-             │                                │                                │
-             │                                │                                │
-      ┌──────▼───────┐                ┌───────▼────────┐               ┌───────▼─────────┐
-      │ ArgoCD (Core)│                │  ArgoCD (Agent)│               │  ArgoCD (Agent) │
-      │    Server    │                │ (Optional Sync)│               │ (Optional Sync) │
-      └──────────────┘                └────────────────┘               └─────────────────┘
-
-### Configuration Steps
-
+# Configuration Steps
 
 A- déploiement de la VM BASTION
+
 https://github.com/OlivierKouokam/aws-tf-stack/terraform-tf
 
 B- déploiement des clusters depuis la VM BASTION
@@ -38,50 +12,66 @@ B- déploiement des clusters depuis la VM BASTION
 
 #!/bin/bash
 
-# ────────────────────────────────────────────────────────────────
-# 1. AWS Credentials & Region Setup (Temporary, use IAM role ideally)
-# ────────────────────────────────────────────────────────────────
+## ────────────────────────────────────────────────────────────────
+## 1. AWS Credentials & Region Setup (Temporary, use IAM role ideally)
+## ────────────────────────────────────────────────────────────────
+
 export AWS_ACCESS_KEY_ID=XXX**************XXX
 
 export AWS_SECRET_ACCESS_KEY=YYY**********************************YYY
 
 export AWS_DEFAULT_REGION=us-east-1
 
-# ────────────────────────────────────────────────────────────────
-# 2. Install Required Tools (eksctl, aws-cli, kubectl, argocd cli)
-# ────────────────────────────────────────────────────────────────
+## ────────────────────────────────────────────────────────────────
+## 2. Install Required Tools (eksctl, aws-cli, kubectl, argocd cli)
+## ────────────────────────────────────────────────────────────────
+
 sudo apt update
+
 sudo apt install -y unzip curl bash-completion
 
-# Install eksctl
+## Install eksctl
+
 curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp
+
 sudo mv /tmp/eksctl /usr/local/bin/
 
-# Install AWS CLI v2
+## Install AWS CLI v2
+
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+
 unzip awscliv2.zip
+
 sudo ./aws/install
+
 aws --version
 
-# Ou bien
-# sudo snap install aws-cli --classic
-# aws --version
+## Ou bien
+## sudo snap install aws-cli --classic
+## aws --version
 
-# Install kubectl
+## Install kubectl
+
 curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+
 chmod +x kubectl
+
 sudo mv kubectl /usr/local/bin/
 
-# Optional: Install ArgoCD CLI
+## Optional: Install ArgoCD CLI
+
 curl -sSL -o argocd "https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64"
+
 chmod +x argocd
+
 sudo mv argocd /usr/local/bin/
 
-# ────────────────────────────────────────────────────────────────
-# 3. Create 3 EKS Clusters (devops, staging, prod for example)
-# ────────────────────────────────────────────────────────────────
+## ────────────────────────────────────────────────────────────────
+## 3. Create 3 EKS Clusters (devops, staging, prod for example)
+## ────────────────────────────────────────────────────────────────
 
 for cluster in cluster-devops cluster-staging cluster-prod; do
+
   eksctl create cluster \
     --name $cluster \
     --region us-east-1 \
@@ -98,11 +88,12 @@ for cluster in cluster-devops cluster-staging cluster-prod; do
     --with-oidc \
     --asg-access \
     --tags "env=devops,team=gitops"
+
 done
 
-# ────────────────────────────────────────────────────────────────
-# 4. Configure Kubeconfig for Multi-Cluster Context Switching
-# ────────────────────────────────────────────────────────────────
+## ────────────────────────────────────────────────────────────────
+## 4. Configure Kubeconfig for Multi-Cluster Context Switching
+## ────────────────────────────────────────────────────────────────
 
 mkdir -p $HOME/.kube
 
@@ -112,16 +103,16 @@ for cluster in cluster-devops cluster-staging cluster-prod; do
     --kubeconfig=$HOME/.kube/config-$cluster
 done
 
-# Merge kubeconfigs manually or switch using KUBECONFIG env
-## echo 'export KUBECONFIG=$HOME/.kube/config-cluster-devops:$HOME/.kube/config-cluster-staging:$HOME/.kube/config-cluster-prod' >> ~/.bashrc
-## export KUBECONFIG=$HOME/.kube/config-cluster-devops:$HOME/.kube/config-cluster-staging:$HOME/.kube/config-cluster-prod
-## alias kdevops="KUBECONFIG=~/.kube/config-cluster-devops kubectl"
-## alias kstaging="KUBECONFIG=~/.kube/config-cluster-staging kubectl"
-## alias kprod="KUBECONFIG=~/.kube/config-cluster-prod kubectl"
+## Merge kubeconfigs manually or switch using KUBECONFIG env
+#### echo 'export KUBECONFIG=$HOME/.kube/config-cluster-devops:$HOME/.kube/config-cluster-staging:$HOME/.kube/config-cluster-prod' >> ~/.bashrc
+#### export KUBECONFIG=$HOME/.kube/config-cluster-devops:$HOME/.kube/config-cluster-staging:$HOME/.kube/config-cluster-prod
+#### alias kdevops="KUBECONFIG=~/.kube/config-cluster-devops kubectl"
+#### alias kstaging="KUBECONFIG=~/.kube/config-cluster-staging kubectl"
+#### alias kprod="KUBECONFIG=~/.kube/config-cluster-prod kubectl"
 
 
 
-# Rename contexts
+## Rename contexts
 echo
 echo "list all contexts"
 echo
@@ -134,14 +125,18 @@ echo
 echo "Rename every context"
 echo
 kubectl config rename-context arn:aws:eks:us-east-1:<account_id>:cluster/cluster-devops devops
+
 kubectl config rename-context arn:aws:eks:us-east-1:<account_id>:cluster/cluster-staging staging
+
 kubectl config rename-context arn:aws:eks:us-east-1:<account_id>:cluster/cluster-prod prod
 
 
-# ────────────────────────────────────────────────────────────────
-# 5. Enable kubectl autocompletion
-# ────────────────────────────────────────────────────────────────
+## ────────────────────────────────────────────────────────────────
+## 5. Enable kubectl autocompletion
+## ────────────────────────────────────────────────────────────────
+
 echo 'source <(kubectl completion bash)' >> ${HOME}/.bashrc
+
 source ${HOME}/.bashrc
 
 
@@ -158,37 +153,44 @@ B-2 Installer argocd dans le cluster-devops
 
 set -e
 
-# Variables cluster
+## Variables cluster
+
 CENTRAL_CLUSTER="cluster-devops"
+
 REMOTE_CLUSTERS=("cluster-staging" "cluster-prod")
 
-# Kubeconfig paths
-## export KUBECONFIG=$HOME/.kube/config-$CENTRAL_CLUSTER
+## Kubeconfig paths
+####### export KUBECONFIG=$HOME/.kube/config-$CENTRAL_CLUSTER
+
 kubectl config get-contexts
+
 kubectl config use-context devops
 
-# 1. Installer ArgoCD sur le cluster central
+## 1. Installer ArgoCD sur le cluster central
 
 echo "Installing ArgoCD on $CENTRAL_CLUSTER ..."
+
 kubectl create namespace argocd || true
+
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 echo "Waiting for ArgoCD server deployment to be ready..."
+
 kubectl -n argocd rollout status deployment argocd-server
 
-# 2. Exposer le serveur ArgoCD (option simple via port-forward, ou LoadBalancer)
+## 2. Exposer le serveur ArgoCD (option simple via port-forward, ou LoadBalancer)
 
-# Option 1: Port-forward (pour test/dev)
-## echo "Starting port-forward for ArgoCD server (local port 8080)..."
-## kubectl -n argocd port-forward svc/argocd-server 8080:443 & PORT_FORWARD_PID=$!
-## sleep 5 # wait a moment for port-forward to be established
+## Option 1: Port-forward (pour test/dev)
+##echo "Starting port-forward for ArgoCD server (local port 8080)..."
+##kubectl -n argocd port-forward svc/argocd-server 8080:443 & PORT_FORWARD_PID=$!
+##sleep 5 # wait a moment for port-forward to be established
 
-# Option 2: Patch argocd service to NodePort or LoadBalancer
+## Option 2: Patch argocd service to NodePort or LoadBalancer
 			Or create argocd-server-lb LoadBalancer service
 
 
 
-# 3. Login ArgoCD CLI (password = admin initial password is in a secret)
+## 3. Login ArgoCD CLI (password = admin initial password is in a secret)
 
 ARGOCD_PASSWORD=$(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 --decode)
 
@@ -198,26 +200,26 @@ argocd login <argocd-server-lb svc url:port> --username admin --password $ARGOCD
 
 # 4. Ajouter les clusters distants à ArgoCD
 
-###  for cluster in "${REMOTE_CLUSTERS[@]}"; do
-###    echo "Adding cluster $cluster to ArgoCD..."
-###  
-###  export KUBECONFIG=$HOME/.kube/config-$cluster
-###  
-###    # On récupère le contexte kubectl
-###    CONTEXT_NAME=$(kubectl config current-context)
-###  
-###    # Ajouter le cluster distant dans ArgoCD
-###    argocd cluster add $CONTEXT_NAME --yes
-###  done
+#######  for cluster in "${REMOTE_CLUSTERS[@]}"; do
+#######    echo "Adding cluster $cluster to ArgoCD..."
+#######  
+#######  export KUBECONFIG=$HOME/.kube/config-$cluster
+#######  
+#######    # On récupère le contexte kubectl
+#######    CONTEXT_NAME=$(kubectl config current-context)
+#######
+#######    # Ajouter le cluster distant dans ArgoCD
+#######    argocd cluster add $CONTEXT_NAME --yes
+#######  done
 
 /*
 for cluster in "${REMOTE_CLUSTERS[@]}"; do
   echo "Adding cluster $cluster to ArgoCD..."
 
-  # On récupère le contexte kubectl
+  #####On récupère le contexte kubectl
   CONTEXT_NAME=$(kubectl config current-context)
 
-  # Ajouter le cluster distant dans ArgoCD
+  #####Ajouter le cluster distant dans ArgoCD
   argocd cluster add $CONTEXT_NAME --yes
 done
 */
@@ -226,22 +228,26 @@ done
 echo "Bootstrap ArgoCD multi-cluster terminé !"
 
 # 5. Suggestion: configure argocd CLI autocompletion
+
 echo 'source <(argocd completion bash)' >> ~/.bashrc
+
 source ~/.bashrc
 
 
-3-c ajouter les clusters avec la commande "argocd cluster add"
-  
+3-c ajouter les clusters avec la commande "argocd cluster add"  
 	for context in devops staging prod; do
 	  echo "➕ Ajout du cluster: $context"
 	  argocd cluster add "$context" --name "$context"
 	done
-  
+
   argocd cluster list
 
 kubectl get sa -n argocd
+
 kubectl get clusterrolebinding -o wide | grep argocd
+
 kubectl get clusterrole argocd-application-controller -o yaml
 	
 https://github.com/OlivierKouokam/argocd-repo.git
+
 https://github.com/kodekloudhub/example-voting-app/tree/master/k8s-specifications
