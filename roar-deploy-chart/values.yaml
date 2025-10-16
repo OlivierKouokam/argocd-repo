@@ -12,7 +12,7 @@ db:
     targetPort: 3306
   storage:
     size: 2Gi
-    storageClass: standard
+    storageClass: manual  # ← Changé de "standard" à "manual"
 
 # Web application configuration
 web:
@@ -28,3 +28,11 @@ web:
 secrets:
   mysqlpassword: "YWRtaW4="  # admin
   mysqlrootpassword: "cm9vdCsx"  # root+1
+
+# Persistent Volume configuration
+persistence:
+  mysql:
+    size: 2Gi
+    storageClass: manual
+    hostPath: "/data/roar-mysql"  # ← Nouveau
+    reclaimPolicy: Recycle        # ← Nouveau
