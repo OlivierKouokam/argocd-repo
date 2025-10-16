@@ -50,5 +50,5 @@ spec:
       volumes:
       - name: mysql-storage
         persistentVolumeClaim:
-          claimName: mysql-pvc
+          claimName: roar-mysql-pvc
               
