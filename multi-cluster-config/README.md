@@ -114,16 +114,27 @@ done
 
 ## Rename contexts
 echo
+
 echo "list all contexts"
+
 echo
+
 kubectl config get-contexts
+
 echo
+
 echo "get aws identity"
+
 echo
+
 aws sts get-caller-identity
+
 echo
+
 echo "Rename every context"
+
 echo
+
 kubectl config rename-context arn:aws:eks:us-east-1:<account_id>:cluster/cluster-devops devops
 
 kubectl config rename-context arn:aws:eks:us-east-1:<account_id>:cluster/cluster-staging staging
