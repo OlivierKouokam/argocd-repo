@@ -192,8 +192,11 @@ kubectl -n argocd rollout status deployment argocd-server
 ## 2. Exposer le serveur ArgoCD (option simple via port-forward, ou LoadBalancer)
 
 ## Option 1: Port-forward (pour test/dev)
+
 ##echo "Starting port-forward for ArgoCD server (local port 8080)..."
+
 ##kubectl -n argocd port-forward svc/argocd-server 8080:443 & PORT_FORWARD_PID=$!
+
 ##sleep 5 # wait a moment for port-forward to be established
 
 ## Option 2: Patch argocd service to NodePort or LoadBalancer
@@ -212,27 +215,43 @@ argocd login <argocd-server-lb svc url:port> --username admin --password $ARGOCD
 # 4. Ajouter les clusters distants à ArgoCD
 
 #######  for cluster in "${REMOTE_CLUSTERS[@]}"; do
+
 #######    echo "Adding cluster $cluster to ArgoCD..."
+
 #######  
+
 #######  export KUBECONFIG=$HOME/.kube/config-$cluster
+
 #######  
+
 #######    # On récupère le contexte kubectl
+
 #######    CONTEXT_NAME=$(kubectl config current-context)
+
 #######
+
 #######    # Ajouter le cluster distant dans ArgoCD
+
 #######    argocd cluster add $CONTEXT_NAME --yes
+
 #######  done
 
 /*
+
 for cluster in "${REMOTE_CLUSTERS[@]}"; do
+
   echo "Adding cluster $cluster to ArgoCD..."
 
   #####On récupère le contexte kubectl
+
   CONTEXT_NAME=$(kubectl config current-context)
 
   #####Ajouter le cluster distant dans ArgoCD
+  
   argocd cluster add $CONTEXT_NAME --yes
+
 done
+
 */
 
 
@@ -246,9 +265,13 @@ source ~/.bashrc
 
 
 3-c ajouter les clusters avec la commande "argocd cluster add"  
+
 	for context in devops staging prod; do
+	
 	  echo "➕ Ajout du cluster: $context"
+	  
 	  argocd cluster add "$context" --name "$context"
+
 	done
 
   argocd cluster list
