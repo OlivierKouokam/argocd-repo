@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roar-web
+  labels:
+    name: roar-web
+    app: roar-web
+  namespace: {{ .Values.namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: roar-web
+  replicas: {{ .Values.web.replicas }}
+  template:
+    metadata:
+      labels:
+        name: roar-web
+        app: roar-web
+    spec:
+      containers:
+      - name: roar-web
+        image: {{ .Values.web.image }}
+        ports:
+        - name: web
+          containerPort: 8080

@@ -1,0 +1,30 @@
+# Namespace configuration
+namespace: roar
+
+# Database configuration
+db:
+  image: quay.io/bclaster/roar-db:1.0.2
+  replicas: 1
+  database: registry
+  user: admin
+  service:
+    port: 3306
+    targetPort: 3306
+  storage:
+    size: 2Gi
+    storageClass: standard
+
+# Web application configuration
+web:
+  image: quay.io/bclaster/roar-web:1.0.1
+  replicas: 1
+  service:
+    type: NodePort
+    port: 8089
+    targetPort: 8080
+    nodePort: 31790
+
+# Secrets (base64 encoded)
+secrets:
+  mysqlpassword: "YWRtaW4="  # admin
+  mysqlrootpassword: "cm9vdCsx"  # root+1
