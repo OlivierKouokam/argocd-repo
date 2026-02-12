@@ -2,10 +2,10 @@
 # vi: set ft=ruby :
 
 CLUSTERS = {
-  #"test" => { master_ip: "192.168.99.10", worker_count: 1, master_ram: 3072, worker_ram: 2048 },
-  "manage"  => { master_ip: "192.168.99.20", worker_count: 0, master_ram: 2048, worker_ram: 0 },
-  "stag" => { master_ip: "192.168.99.30", worker_count: 0, master_ram: 2048, worker_ram: 0 },
-  "prod" => { master_ip: "192.168.99.40", worker_count: 0, master_ram: 2048, worker_ram: 0 }
+  "manage"  => { master_ip: "192.168.99.20", worker_count: 0, master_ram: 3072, worker_ram: 0 },
+  "stag" => { master_ip: "192.168.99.30", worker_count: 0, master_ram: 3072, worker_ram: 0 },
+  "prod" => { master_ip: "192.168.99.40", worker_count: 0, master_ram: 3072, worker_ram: 0 },
+  #"test" => { master_ip: "192.168.99.10", worker_count: 1, master_ram: 3072, worker_ram: 2048 } #don't for NoScheduleTaint for master
 }
 
 Vagrant.configure("2") do |config|
