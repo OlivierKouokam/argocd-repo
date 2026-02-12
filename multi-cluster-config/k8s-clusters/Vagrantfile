@@ -1,0 +1,50 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+CLUSTERS = {
+  #"test" => { master_ip: "192.168.99.10", worker_count: 1, master_ram: 3072, worker_ram: 2048 },
+  "manage"  => { master_ip: "192.168.99.20", worker_count: 0, master_ram: 2048, worker_ram: 0 },
+  "stag" => { master_ip: "192.168.99.30", worker_count: 0, master_ram: 2048, worker_ram: 0 },
+  "prod" => { master_ip: "192.168.99.40", worker_count: 0, master_ram: 2048, worker_ram: 0 }
+}
+
+Vagrant.configure("2") do |config|
+  CLUSTERS.each do |cluster_name, cfg|
+    # Master node
+    config.vm.define "#{cluster_name}-master" do |master|
+      master.vm.box = "eazytrainingfr/centos7"
+      master.vm.network "private_network", type: "static", ip: cfg[:master_ip]
+      master.vm.hostname = "#{cluster_name}-master"
+      master.vm.provider "virtualbox" do |v|
+        v.name = "#{cluster_name}-master"
+        v.memory = cfg[:master_ram]
+        v.cpus = 2
+      end
+      master.vm.provision :shell do |shell|
+        shell.path = "install_kubernetes.sh"
+        shell.args = ["master", cfg[:master_ip]]
+      end
+    end
+
+    # Worker nodes (si nécessaire)
+    if cfg[:worker_count] > 0
+      (1..cfg[:worker_count]).each do |i|
+        config.vm.define "#{cluster_name}-worker#{i}" do |worker|
+          worker.vm.box = "eazytrainingfr/centos7"
+          base_ip = cfg[:master_ip].split('.')[0..2].join('.')
+          worker.vm.network "private_network", type: "static", ip: "#{base_ip}.1#{i}"
+          worker.vm.hostname = "#{cluster_name}-worker#{i}"
+          worker.vm.provider "virtualbox" do |v|
+            v.name = "#{cluster_name}-worker#{i}"
+            v.memory = cfg[:worker_ram]
+            v.cpus = 2
+          end
+          worker.vm.provision :shell do |shell|
+            shell.path = "install_kubernetes.sh"
+            shell.args = ["node", cfg[:master_ip]]
+          end
+        end
+      end
+    end
+  end
+end
