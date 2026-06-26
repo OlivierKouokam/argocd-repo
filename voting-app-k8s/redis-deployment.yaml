@@ -23,6 +23,43 @@ spec:
         volumeMounts:
         - mountPath: /data
           name: redis-data
+        
+        # --- CONFIGURATION DES SONDES ---
+
+        # 1. Protection au démarrage (utile si chargement d'un gros dump RDB/AOF)
+        # Donne jusqu'à 30 secondes (15 essais * 2s) pour être prêt
+        startupProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          periodSeconds: 2
+          failureThreshold: 15
+
+        # 2. Vérification de routine pour le trafic des applications clientes
+        # Valide toutes les 5 secondes que Redis répond "PONG"
+        readinessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 2
+          periodSeconds: 5
+          timeoutSeconds: 2
+
+        # 3. Sécurité ultime en cas de deadlock total du processus
+        # Très tolérante pour éviter les redémarrages intempestifs lors de commandes lourdes
+        livenessProbe:
+          exec:
+            command:
+            - redis-cli
+            - ping
+          initialDelaySeconds: 5
+          periodSeconds: 15
+          failureThreshold: 3
+          timeoutSeconds: 3
+        # ---------------------------------
+
       volumes:
       - name: redis-data
-        emptyDir: {} 
+        emptyDir: {}
