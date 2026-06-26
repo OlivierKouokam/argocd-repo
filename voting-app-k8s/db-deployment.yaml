@@ -28,6 +28,43 @@ spec:
         volumeMounts:
         - mountPath: /var/lib/postgresql/data
           name: db-data
+        
+        # --- CONFIGURATION DES SONDES ---
+        
+        # 1. Donne à Postgres jusqu'à 60 secondes (30 * 2s) pour initialiser ses fichiers au départ
+        startupProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          periodSeconds: 2
+          failureThreshold: 30
+
+        # 2. Vérifie toutes les 10 secondes si la DB accepte toujours les connexions des clients
+        readinessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5
+
+        # 3. Sécurité si le processus freeze. Très tolérante (échoue uniquement après 3 essais ratés espacés de 20s)
+        livenessProbe:
+          exec:
+            command:
+            - pg_isready
+            - -U
+            - postgres
+          initialDelaySeconds: 10
+          periodSeconds: 20
+          failureThreshold: 3
+          timeoutSeconds: 5
+        # ---------------------------------
+
       volumes:
       - name: db-data
-        emptyDir: {} 
+        emptyDir: {}
